@@ -122,8 +122,8 @@ export const getStaticProps = async () => {
 
   if (!images) return { props: { images: null, topics } };
 
-  return { props: { images, topics } };
-  // return { props: { images, topics }, revalidate: 60 };
+  // return { props: { images, topics } };
+  return { props: { images, topics }, revalidate: 5 * 60 };
 };
 
 export default sizeMe()(Home);
