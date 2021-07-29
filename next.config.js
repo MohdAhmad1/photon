@@ -7,4 +7,8 @@ module.exports = {
     config.plugins.push(new WindiCSS());
     return config;
   },
+
+  images: {
+    domains: ["images.unsplash.com", "deelay.me", "picsum.photos"],
+  },
 };

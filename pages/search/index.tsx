@@ -1,28 +1,17 @@
 import ImageCard from "components/ImageCard";
-import { useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import Link from "next/link";
-// import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
-import InfiniteScroll from "react-infinite-scroll-component";
-import StackGrid from "react-stack-grid";
+import { useRef } from "react";
+import { IAPIResponse } from "types/ApiResponse";
+import { ISearchResponse } from "types/SearchResponse";
+import { ITopicsResponse } from "types/TopicsResponse";
 
-import sizeMe from "react-sizeme";
-
-// types
-import type { InferGetStaticPropsType } from "next";
-import type { IAPIResponse } from "types/ApiResponse";
-import type { ITopicsResponse } from "types/TopicsResponse";
-
-type HomeProps = InferGetStaticPropsType<typeof getStaticProps> & {
-  size: {
-    width: number | null;
-    height: number | null;
-  };
-};
-
-const Home = ({ images, topics, size }: HomeProps) => {
+const Search = ({
+  images,
+  topics,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const catagoriesWrapper = useRef(null);
-  const [newImages, setNewImages] = useState<IAPIResponse[] | []>([]);
 
   return (
     <div
@@ -50,15 +39,9 @@ const Home = ({ images, topics, size }: HomeProps) => {
             ))}
           </motion.div>
 
-          <div className="w-full">
-            <StackGrid
-              columnWidth={(size?.width as number) <= 768 ? "50%" : "33.33%"}
-              enableSSR={true}
-              className="overflow-hidden"
-              gutterHeight={0}
-              gutterWidth={0}
-            >
-              {images?.map((image) => (
+          <div className="masonry">
+            {images &&
+              images.data.map((image) => (
                 <ImageCard
                   key={image.id}
                   link={image.id}
@@ -69,7 +52,6 @@ const Home = ({ images, topics, size }: HomeProps) => {
                   alt="any-img"
                 />
               ))}
-            </StackGrid>
           </div>
         </>
       ) : (
@@ -85,36 +67,62 @@ const Home = ({ images, topics, size }: HomeProps) => {
 };
 
 // static stuff
-export const getStaticProps = async () => {
-  // images fn and var declaration starts
-  const images: {
+
+type imageProps = {
+  totalResult: number;
+  totalPages: number;
+
+  data: {
     id: string;
     width: number;
     height: number;
     blur_hash: string;
     url: string;
-  }[] = [];
+  }[];
+};
+
+type topicsProps = {
+  id: string;
+  slug: string;
+  title: string;
+};
+
+type HomeProps = {
+  images: imageProps[] | null;
+  topics: topicsProps[] | null;
+};
+
+export const getServerSideProps = async ({
+  query,
+}: GetServerSidePropsContext) => {
+  // images fn and var declaration starts
+  const images: imageProps = { totalPages: 0, totalResult: 0, data: [] };
 
   await fetch(
-    `https://api.unsplash.com/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=30&order_by=popular`
+    `https://api.unsplash.com/search/photos?query=${query.q}&client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular`
   )
-    .then((data) => data.json())
-    .then((imgData: IAPIResponse[]) => {
-      imgData.map(({ id, width, height, blur_hash, urls }) => {
-        images.push({ id, width, height, blur_hash, url: urls.thumb });
+    .then((e) => e.json())
+    .then((imgResponse: ISearchResponse) => {
+      images.totalPages = imgResponse.total_pages;
+      images.totalResult = imgResponse.total;
+
+      imgResponse.results.map(({ id, width, height, blur_hash, urls }) => {
+        images.data.push({ id, width, height, blur_hash, url: urls.thumb });
       });
     });
-  // images fn and var declaration ends
+  // images fn and var declaration starts
 
   // topics fn and var declaration starts
-  const topics: { id: string; slug: string; title: string }[] = [];
+  const topics: topicsProps[] = [];
 
   await fetch(
     `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20`
   )
-    .then((data) => data.json())
-    .then((imgData: ITopicsResponse[]) => {
-      imgData.map(({ id, slug, title }) => {
+    .then((e) => e.json())
+    .then((e: ITopicsResponse[]) => {
+      console.log(e);
+
+      e.map(({ id, slug, title }) => {
         topics.push({ id, slug, title });
       });
     });
@@ -123,7 +131,6 @@ export const getStaticProps = async () => {
   if (!images) return { props: { images: null, topics } };
 
   return { props: { images, topics } };
-  // return { props: { images, topics }, revalidate: 60 };
 };
 
-export default sizeMe()(Home);
+export default Search;
