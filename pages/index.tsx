@@ -2,9 +2,8 @@ import ImageCard from "components/ImageCard";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-// import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
-import InfiniteScroll from "react-infinite-scroll-component";
-import StackGrid from "react-stack-grid";
+import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
+// import StackGrid from "react-stack-grid";
 
 import sizeMe from "react-sizeme";
 
@@ -51,7 +50,7 @@ const Home = ({ images, topics, size }: HomeProps) => {
           </motion.div>
 
           <div className="w-full">
-            <StackGrid
+            {/* <StackGrid
               columnWidth={(size?.width as number) <= 768 ? "50%" : "33.33%"}
               enableSSR={true}
               className="overflow-hidden"
@@ -69,7 +68,25 @@ const Home = ({ images, topics, size }: HomeProps) => {
                   alt="any-img"
                 />
               ))}
-            </StackGrid>
+            </StackGrid> */}
+
+            <ResponsiveMasonry
+              columnsCountBreakPoints={{ 350: 1, 750: 2, 900: 3 }}
+            >
+              <Masonry>
+                {images?.map((image) => (
+                  <ImageCard
+                    key={image.id}
+                    link={image.id}
+                    width={image.width}
+                    height={image.height}
+                    src={image.url}
+                    blur_hash={image.blur_hash}
+                    alt="any-img"
+                  />
+                ))}
+              </Masonry>
+            </ResponsiveMasonry>
           </div>
         </>
       ) : (
