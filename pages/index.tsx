@@ -1,9 +1,10 @@
 import ImageCard from "components/ImageCard";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 // import StackGrid from "react-stack-grid";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 import sizeMe from "react-sizeme";
 
@@ -22,6 +23,7 @@ type HomeProps = InferGetStaticPropsType<typeof getStaticProps> & {
 const Home = ({ images, topics, size }: HomeProps) => {
   const catagoriesWrapper = useRef(null);
   const [newImages, setNewImages] = useState<IAPIResponse[] | []>([]);
+  const [page, setPage] = useState(3);
 
   return (
     <div
@@ -69,7 +71,7 @@ const Home = ({ images, topics, size }: HomeProps) => {
                 />
               ))}
             </StackGrid> */}
-
+            {/* 
             <ResponsiveMasonry
               columnsCountBreakPoints={{ 350: 1, 750: 2, 900: 3 }}
             >
@@ -86,7 +88,52 @@ const Home = ({ images, topics, size }: HomeProps) => {
                   />
                 ))}
               </Masonry>
-            </ResponsiveMasonry>
+            </ResponsiveMasonry> */}
+
+            <div className="masonry">
+              <InfiniteScroll
+                dataLength={images.length + newImages.length}
+                next={() => {
+                  fetch(
+                    `https://api.unsplash.com/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=15&page=${page}&order_by=popular`
+                  )
+                    .then((data) => data.json())
+                    .then((imgData: IAPIResponse[]) => {
+                      // imgData.map(({ id, width, height, blur_hash, urls }) => {
+                      //   images?.push({ id, width, height, blur_hash, url: urls.thumb });
+                      // });
+                      setNewImages([...newImages, ...imgData]);
+                      setPage(page + 1);
+                    });
+                }}
+                hasMore={true}
+                loader={<h1>Lading</h1>}
+              >
+                {images?.map((image) => (
+                  <ImageCard
+                    key={image.id}
+                    link={image.id}
+                    width={image.width}
+                    height={image.height}
+                    src={image.url}
+                    blur_hash={image.blur_hash}
+                    alt="any-img"
+                  />
+                ))}
+                {newImages?.map((image) => (
+                  <ImageCard
+                    key={image.id}
+                    link={image.id}
+                    width={image.width}
+                    height={image.height}
+                    src={image.urls.thumb}
+                    blur_hash={image.blur_hash}
+                    alt="any-img"
+                    diff
+                  />
+                ))}
+              </InfiniteScroll>
+            </div>
           </div>
         </>
       ) : (
@@ -113,7 +160,7 @@ export const getStaticProps = async () => {
   }[] = [];
 
   await fetch(
-    `https://api.unsplash.com/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=30&order_by=popular`
+    `https://api.unsplash.com/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20&order_by=popular`
   )
     .then((data) => data.json())
     .then((imgData: IAPIResponse[]) => {
@@ -137,10 +184,10 @@ export const getStaticProps = async () => {
     });
   // topics fn and var declaration ends
 
-  if (!images) return { props: { images: null, topics } };
+  // if (!images) return { props: { images: null, topics }, revalidate: 5 * 60 };
 
-  // return { props: { images, topics } };
-  return { props: { images, topics }, revalidate: 5 * 60 };
+  return { props: { images, topics } };
+  // return { props: { images, topics }, revalidate: 5 * 60 };
 };
 
-export default sizeMe()(Home);
+export default Home;

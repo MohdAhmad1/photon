@@ -11,4 +11,8 @@ module.exports = {
   images: {
     domains: ["images.unsplash.com", "deelay.me", "picsum.photos"],
   },
+
+  devIndicators: {
+    autoPrerender: true,
+  },
 };
