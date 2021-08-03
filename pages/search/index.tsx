@@ -1,9 +1,9 @@
-import ImageCard from "components/ImageCard";
-import { motion } from "framer-motion";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import Link from "next/link";
 import { useRef } from "react";
-import { IAPIResponse } from "types/ApiResponse";
+import ImageCard from "components/ImageCard";
+import Topics from "components/Topics";
+
+// types
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { ISearchResponse } from "types/SearchResponse";
 import { ITopicsResponse } from "types/TopicsResponse";
 
@@ -20,34 +20,17 @@ const Search = ({
     >
       {images ? (
         <>
-          <motion.div
-            key="tags"
-            drag="x"
-            dragPropagation
-            dragConstraints={catagoriesWrapper}
-            dragTransition={{ power: 0.035 }}
-            className="rounded-lg cursor-move flex my-2"
-          >
-            {topics.map((topic) => (
-              <div key={topic.id}>
-                <Link href={`/category/${topic.slug}`} passHref>
-                  <a className="rounded-lg cursor-pointer bg-light-500 mx-2 w-max py-2 px-4 transition-all duration-150 inline-block dark:bg-dark-200 dark:hover:bg-dark-100 hover:bg-light-700">
-                    #{topic.title}
-                  </a>
-                </Link>
-              </div>
-            ))}
-          </motion.div>
+          <Topics items={topics} wrapper={catagoriesWrapper} />
 
           <div className="masonry">
             {images &&
-              images.data.map((image) => (
+              images.results.map((image) => (
                 <ImageCard
                   key={image.id}
                   link={image.id}
                   width={image.width}
                   height={image.height}
-                  src={image.url}
+                  src={image.urls.raw}
                   blur_hash={image.blur_hash}
                   alt="any-img"
                 />
@@ -68,19 +51,6 @@ const Search = ({
 
 // static stuff
 
-type imageProps = {
-  totalResult: number;
-  totalPages: number;
-
-  data: {
-    id: string;
-    width: number;
-    height: number;
-    blur_hash: string;
-    url: string;
-  }[];
-};
-
 type topicsProps = {
   id: string;
   slug: string;
@@ -88,7 +58,7 @@ type topicsProps = {
 };
 
 type HomeProps = {
-  images: imageProps[] | null;
+  images: ISearchResponse[] | null;
   topics: topicsProps[] | null;
 };
 
@@ -96,19 +66,14 @@ export const getServerSideProps = async ({
   query,
 }: GetServerSidePropsContext) => {
   // images fn and var declaration starts
-  const images: imageProps = { totalPages: 0, totalResult: 0, data: [] };
+  let images: ISearchResponse = { total: 0, total_pages: 0, results: [] };
 
   await fetch(
     `https://api.unsplash.com/search/photos?query=${query.q}&client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular`
   )
     .then((imgRes) => imgRes.json())
     .then((imgRes: ISearchResponse) => {
-      images.totalPages = imgRes.total_pages;
-      images.totalResult = imgRes.total;
-
-      imgRes.results.map(({ id, width, height, blur_hash, urls }) => {
-        images.data.push({ id, width, height, blur_hash, url: urls.thumb });
-      });
+      images = imgRes;
     });
   // images fn and var declaration starts
 

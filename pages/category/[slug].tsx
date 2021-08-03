@@ -1,19 +1,17 @@
 import ImageCard from "components/ImageCard";
 import { useRef } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import Topics from "components/Topics";
 
 // types
 import type {
   GetStaticPaths,
-  GetStaticProps,
   GetStaticPropsContext,
   InferGetStaticPropsType,
 } from "next";
 import type { IAPIResponse } from "types/ApiResponse";
 import type { ITopicsResponse } from "types/TopicsResponse";
 
-const Home = ({
+const CatagorySlug = ({
   images,
   topics,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
@@ -26,24 +24,7 @@ const Home = ({
     >
       {images ? (
         <>
-          <motion.div
-            key="tags"
-            drag="x"
-            dragPropagation
-            dragConstraints={catagoriesWrapper}
-            dragTransition={{ power: 0.035 }}
-            className="rounded-lg cursor-move flex my-2"
-          >
-            {topics?.map((topic) => (
-              <div key={topic.id}>
-                <Link href={`/category/${topic.slug}`} passHref>
-                  <a className="rounded-lg cursor-pointer bg-light-500 mx-2 w-max py-2 px-4 transition-all duration-150 inline-block dark:bg-dark-200 dark:hover:bg-dark-100 hover:bg-light-700">
-                    #{topic.title}
-                  </a>
-                </Link>
-              </div>
-            ))}
-          </motion.div>
+          <Topics items={topics} wrapper={catagoriesWrapper} />
 
           <div className="masonry">
             {images &&
@@ -53,7 +34,7 @@ const Home = ({
                   link={image.id}
                   width={image.width}
                   height={image.height}
-                  src={image.url}
+                  src={image.urls.raw}
                   blur_hash={image.blur_hash}
                   alt="any-img"
                 />
@@ -72,54 +53,29 @@ const Home = ({
   );
 };
 
-type imageProps = {
-  id: string;
-  width: number;
-  height: number;
-  blur_hash: string;
-  url: string;
-};
-
-type topicsProps = {
-  id: string;
-  slug: string;
-  title: string;
-};
-
-type HomeProps = {
-  images: imageProps[] | null;
-  topics: topicsProps[] | null;
-};
-
 // static Props
-export const getStaticProps: GetStaticProps<HomeProps> = async ({
-  params,
-}: GetStaticPropsContext) => {
+export const getStaticProps = async ({ params }: GetStaticPropsContext) => {
   // images fn and var declaration starts
-  const images: imageProps[] = [];
+  const images: IAPIResponse[] = [];
 
   await fetch(
     `https://api.unsplash.com/topics/${params?.slug}/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular`
   )
     .then((imgRes) => imgRes.json())
     .then((imgData: IAPIResponse[]) => {
-      imgData.map(({ id, width, height, blur_hash, urls }) => {
-        images.push({ id, width, height, blur_hash, url: urls.thumb });
-      });
+      images.push(...imgData);
     });
   // images fn and var declaration ends
 
   // topics fn and var declaration starts
-  const topics: topicsProps[] = [];
+  const topics: ITopicsResponse[] = [];
 
   await fetch(
     `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20`
   )
     .then((topicsRes) => topicsRes.json())
     .then((topicsRes: ITopicsResponse[]) => {
-      topicsRes.map(({ id, slug, title }) => {
-        topics.push({ id, slug, title });
-      });
+      topics.push(...topicsRes);
     });
   // topics fn and var declaration ends
 
@@ -144,4 +100,4 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export default Home;
+export default CatagorySlug;
