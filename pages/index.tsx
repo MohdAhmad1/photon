@@ -10,6 +10,7 @@ import type { InferGetStaticPropsType } from "next";
 import type { IAPIResponse } from "types/ApiResponse";
 import type { ITopicsResponse } from "types/TopicsResponse";
 import Image from "next/image";
+import { BlurhashCanvas } from "react-blurhash";
 
 type HomeProps = InferGetStaticPropsType<typeof getStaticProps> & {};
 
@@ -35,15 +36,25 @@ const Home = ({ images, topics, imgOfTheDay }: HomeProps) => {
     >
       {images ? (
         <>
-          <div className="h-lg w-full relative">
+          <div className="flex h-lg w-full relative">
             {imgOfTheDay && (
-              <Image
-                src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
-                alt={imgOfTheDay.alt_description || "Image Of The Day"}
-                unoptimized={true}
-                layout="fill"
-                className="object-cover"
-              />
+              <>
+                <BlurhashCanvas
+                  hash={imgOfTheDay.blur_hash}
+                  punch={1}
+                  className="h-full w-full inset-0 absolute"
+                  height={32}
+                  width={32}
+                />
+                <Image
+                  src={`${imgOfTheDay.urls.raw}&w=150&fm=webp&q=75`}
+                  // src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
+                  alt={imgOfTheDay.alt_description || "Image Of The Day"}
+                  unoptimized={true}
+                  layout="fill"
+                  className="object-cover"
+                />
+              </>
             )}
           </div>
 
@@ -116,8 +127,8 @@ export const getStaticProps = async () => {
     .catch((err) => console.log(err));
   // topics fn and var declaration ends
 
-  // random img fn and var declatation starts
-  var imgOfTheDay: IAPIResponse;
+  // random images fn and var declaration starts
+  let imgOfTheDay: IAPIResponse | null = null;
 
   await fetch(
     `https://api.unsplash.com/photos/random/?client_id=${process.env.NEXT_PUBLIC_API_KEY}`
@@ -127,13 +138,15 @@ export const getStaticProps = async () => {
       imgOfTheDay = imgData;
     })
     .catch((err) => console.log(err));
-  // random img fn and var declatation ends
+  // random images fn and var declaration ends
 
   if (images.length === 0)
     return { props: { images: null, topics: null, imgOfTheDay: null } };
 
-  // return { props: { images, topics } };
-  return { props: { images, topics, imgOfTheDay }, revalidate: 10 * 60 }; // revalidate in seconds
+  return {
+    props: { images, topics, imgOfTheDay: imgOfTheDay as IAPIResponse | null },
+    revalidate: 10 * 60,
+  }; // revalidate in seconds
 };
 
 export default Home;
