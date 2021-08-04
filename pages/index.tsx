@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-component";
@@ -9,16 +9,13 @@ import Topics from "components/Topics";
 import type { InferGetStaticPropsType } from "next";
 import type { IAPIResponse } from "types/ApiResponse";
 import type { ITopicsResponse } from "types/TopicsResponse";
+import Image from "next/image";
 
 type HomeProps = InferGetStaticPropsType<typeof getStaticProps> & {};
 
-const Home = ({ images, topics }: HomeProps) => {
+const Home = ({ images, topics, imgOfTheDay }: HomeProps) => {
   const catagoriesWrapper = useRef(null);
   const [page, setPage] = useState(3);
-
-  useEffect(() => {
-    console.error("hello WOrld");
-  }, []);
 
   const nextFunction = () => {
     fetch(
@@ -38,9 +35,21 @@ const Home = ({ images, topics }: HomeProps) => {
     >
       {images ? (
         <>
+          <div className="h-lg w-full relative">
+            {imgOfTheDay && (
+              <Image
+                src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
+                alt={imgOfTheDay.alt_description || "Image Of The Day"}
+                unoptimized={true}
+                layout="fill"
+                className="object-cover"
+              />
+            )}
+          </div>
+
           <Topics items={topics} wrapper={catagoriesWrapper} />
 
-          <div className="w-full">
+          <div className="w-full px-0.5">
             <InfiniteScroll
               dataLength={images.length}
               next={nextFunction}
@@ -51,22 +60,15 @@ const Home = ({ images, topics }: HomeProps) => {
                   Loading ...
                 </h1>
               }
+              className="w-full"
             >
               <Masonry
                 disableImagesLoaded={false}
                 updateOnEachImageLoad={false}
-                className="overflow-hidden"
+                className="w-full overflow-hidden"
               >
                 {images?.map((image) => (
-                  <ImageCard
-                    key={image.id}
-                    link={image.id}
-                    width={image.width}
-                    height={image.height}
-                    src={image.urls.raw}
-                    blur_hash={image.blur_hash}
-                    alt="any-img"
-                  />
+                  <ImageCard key={image.id} data={image} />
                 ))}
               </Masonry>
             </InfiniteScroll>
@@ -92,7 +94,7 @@ export const getStaticProps = async () => {
   const images: IAPIResponse[] = [];
 
   await fetch(
-    `https://api.unsplash.com/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20&order_by=popular`
+    `https://api.unsplash.com/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=30&order_by=popular`
   )
     .then((data) => data.json())
     .then((imgData: IAPIResponse[]) => {
@@ -114,10 +116,24 @@ export const getStaticProps = async () => {
     .catch((err) => console.log(err));
   // topics fn and var declaration ends
 
-  if (images.length === 0) return { props: { images: null, topics: null } };
+  // random img fn and var declatation starts
+  var imgOfTheDay: IAPIResponse;
+
+  await fetch(
+    `https://api.unsplash.com/photos/random/?client_id=${process.env.NEXT_PUBLIC_API_KEY}`
+  )
+    .then((data) => data.json())
+    .then((imgData: IAPIResponse) => {
+      imgOfTheDay = imgData;
+    })
+    .catch((err) => console.log(err));
+  // random img fn and var declatation ends
+
+  if (images.length === 0)
+    return { props: { images: null, topics: null, imgOfTheDay: null } };
 
   // return { props: { images, topics } };
-  return { props: { images, topics }, revalidate: 600 };
+  return { props: { images, topics, imgOfTheDay }, revalidate: 10 * 60 }; // revalidate in seconds
 };
 
 export default Home;

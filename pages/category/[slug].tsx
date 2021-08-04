@@ -1,5 +1,7 @@
+import { useRef, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
+import Masonry from "react-masonry-component";
 import ImageCard from "components/ImageCard";
-import { useRef } from "react";
 import Topics from "components/Topics";
 
 // types
@@ -10,35 +12,62 @@ import type {
 } from "next";
 import type { IAPIResponse } from "types/ApiResponse";
 import type { ITopicsResponse } from "types/TopicsResponse";
+import { useRouter } from "next/dist/client/router";
 
 const CatagorySlug = ({
   images,
   topics,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const catagoriesWrapper = useRef(null);
+  const [page, setPage] = useState(3);
+
+  const router = useRouter();
+
+  const nextFunction = () => {
+    fetch(
+      `https://api.unsplash.com/topics/${router?.query?.slug}/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=15&page=${page}&order_by=popular`
+    )
+      .then((data) => data.json())
+      .then((imgData: IAPIResponse[]) => {
+        images?.push(...imgData);
+        setPage(page + 1);
+      });
+  };
 
   return (
     <div
       ref={catagoriesWrapper}
       className="flex flex-col min-h-screen-sm w-full items-start overflow-x-hidden"
     >
+      {router.isFallback && <h1> LOADING ... </h1>}
+
       {images ? (
         <>
           <Topics items={topics} wrapper={catagoriesWrapper} />
 
-          <div className="masonry">
-            {images &&
-              images.map((image) => (
-                <ImageCard
-                  key={image.id}
-                  link={image.id}
-                  width={image.width}
-                  height={image.height}
-                  src={image.urls.raw}
-                  blur_hash={image.blur_hash}
-                  alt="any-img"
-                />
-              ))}
+          <div className="w-full">
+            <InfiniteScroll
+              dataLength={images.length}
+              next={nextFunction}
+              scrollThreshold={0.7}
+              hasMore={true}
+              loader={
+                <h1 className="font-medium text-center mb-2 text-2xl">
+                  Loading ...
+                </h1>
+              }
+              className="w-full"
+            >
+              <Masonry
+                disableImagesLoaded={false}
+                updateOnEachImageLoad={false}
+                className="w-full overflow-hidden"
+              >
+                {images?.map((image) => (
+                  <ImageCard key={image.id} data={image} />
+                ))}
+              </Masonry>
+            </InfiniteScroll>
           </div>
         </>
       ) : (
@@ -59,7 +88,7 @@ export const getStaticProps = async ({ params }: GetStaticPropsContext) => {
   const images: IAPIResponse[] = [];
 
   await fetch(
-    `https://api.unsplash.com/topics/${params?.slug}/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular`
+    `https://api.unsplash.com/topics/${params?.slug}/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=30&order_by=popular`
   )
     .then((imgRes) => imgRes.json())
     .then((imgData: IAPIResponse[]) => {
@@ -79,15 +108,15 @@ export const getStaticProps = async ({ params }: GetStaticPropsContext) => {
     });
   // topics fn and var declaration ends
 
-  if (!images) return { props: { images: null, topics }, revalidate: 5 * 60 };
+  if (!images) return { props: { images: null, topics } };
 
-  return { props: { images, topics }, revalidate: 5 * 60 };
+  return { props: { images, topics }, revalidate: 10 * 60 }; // revalidate in seconds
 };
 
 // static Paths
 export const getStaticPaths: GetStaticPaths = async () => {
   let topics: ITopicsResponse[] = await fetch(
-    `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20`
+    `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=35`
   ).then((e) => e.json());
 
   const topicPaths = topics.map(({ slug }) => ({
@@ -96,7 +125,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths: topicPaths,
-    fallback: false, // See the "fallback" section below
+    fallback: false,
   };
 };
 

@@ -1,4 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/dist/client/router";
+import InfiniteScroll from "react-infinite-scroll-component";
+import Masonry from "react-masonry-component";
 import ImageCard from "components/ImageCard";
 import Topics from "components/Topics";
 
@@ -12,6 +15,20 @@ const Search = ({
   topics,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const catagoriesWrapper = useRef(null);
+  const [page, setPage] = useState(2);
+  const router = useRouter();
+
+  const nextFunction = () => {
+    fetch(
+      `https://api.unsplash.com/search/photos?query=${router.query.q}&client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular&page=${page}`
+    )
+      .then((data) => data.json())
+      .then((imgData: ISearchResponse) => {
+        images?.results?.push(...imgData.results);
+        setPage(page + 1);
+      })
+      .catch((err) => console.log(err));
+  };
 
   return (
     <div
@@ -22,19 +39,39 @@ const Search = ({
         <>
           <Topics items={topics} wrapper={catagoriesWrapper} />
 
-          <div className="masonry">
-            {images &&
-              images.results.map((image) => (
-                <ImageCard
-                  key={image.id}
-                  link={image.id}
-                  width={image.width}
-                  height={image.height}
-                  src={image.urls.raw}
-                  blur_hash={image.blur_hash}
-                  alt="any-img"
-                />
-              ))}
+          <h1 className="text-3xl">
+            {" "}
+            total images {images.total} pages: {images.total_pages}{" "}
+          </h1>
+
+          <div className="w-full px-0.5">
+            <InfiniteScroll
+              dataLength={images.results.length}
+              next={nextFunction}
+              scrollThreshold={0.7}
+              hasMore={images.total_pages >= page}
+              loader={
+                <h1 className="font-medium text-center mb-2 text-2xl">
+                  Loading ...
+                </h1>
+              }
+              className="w-full"
+              endMessage={
+                <h1 className="font-medium text-center mb-4 text-2xl">
+                  We Dont Have More Images to show
+                </h1>
+              }
+            >
+              <Masonry
+                disableImagesLoaded={false}
+                updateOnEachImageLoad={false}
+                className="w-full overflow-hidden"
+              >
+                {images?.results?.map((image) => (
+                  <ImageCard key={image.id} data={image} />
+                ))}
+              </Masonry>
+            </InfiniteScroll>
           </div>
         </>
       ) : (
@@ -50,17 +87,6 @@ const Search = ({
 };
 
 // static stuff
-
-type topicsProps = {
-  id: string;
-  slug: string;
-  title: string;
-};
-
-type HomeProps = {
-  images: ISearchResponse[] | null;
-  topics: topicsProps[] | null;
-};
 
 export const getServerSideProps = async ({
   query,
@@ -78,7 +104,7 @@ export const getServerSideProps = async ({
   // images fn and var declaration starts
 
   // topics fn and var declaration starts
-  const topics: topicsProps[] = [];
+  const topics: { id: string; slug: string; title: string }[] = [];
 
   await fetch(
     `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20`
