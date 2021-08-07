@@ -88,7 +88,13 @@ const Search = ({
 
 export const getServerSideProps = async ({
   params,
+  res,
 }: GetServerSidePropsContext) => {
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=540, stale-while-revalidate=59"
+  );
+
   // images fn and var declaration starts
   let images: ISearchResponse = { total: 0, total_pages: 0, results: [] };
 

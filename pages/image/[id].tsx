@@ -82,7 +82,13 @@ const DynamicImage = ({
 // static Props
 export const getServerSideProps = async ({
   query,
+  res,
 }: GetServerSidePropsContext) => {
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=540, stale-while-revalidate=59"
+  );
+
   // current images fn and var declaration starts
   const currentImage: IPhotoResponse[] = [];
 
