@@ -92,7 +92,8 @@ export const getServerSideProps = async ({
     .then((imgRes) => imgRes.json())
     .then((imgData: IPhotoResponse) => {
       currentImage.push(imgData);
-    });
+    })
+    .catch((err) => console.log(err));
   // current images fn and var declaration ends
 
   // images fn and var declaration starts

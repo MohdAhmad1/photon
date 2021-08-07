@@ -100,7 +100,8 @@ export const getServerSideProps = async ({
     .then((imgRes) => imgRes.json())
     .then((imgRes: ISearchResponse) => {
       images = imgRes;
-    });
+    })
+    .catch((err) => console.log(err));
   // images fn and var declaration starts
 
   // topics fn and var declaration starts

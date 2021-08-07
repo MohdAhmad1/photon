@@ -162,10 +162,7 @@ export const getStaticProps = async ({ params }: GetStaticPropsContext) => {
       if ((imgData as ErrorResponse).errors) return (images = []);
       images = imgData as IAPIResponse[];
     })
-    .catch((err) => {
-      images = [];
-      console.log(err);
-    });
+    .catch((err) => console.log(err));
   // images fn and var declaration ends
 
   // topics fn and var declaration starts
