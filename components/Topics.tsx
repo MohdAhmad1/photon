@@ -2,10 +2,13 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 import type { MutableRefObject } from "react";
+import type { Tag } from "types/PhotoResponse";
+import type { ITopicsResponse } from "types/TopicsResponse";
 
 interface ITopicsProps {
-  items: { id: string; slug: string; title: string }[] | null;
+  items: ITopicsResponse[] | Tag[] | null;
   wrapper: MutableRefObject<null>;
+  asLink?: boolean;
 }
 
 const Topics = ({ items: topics, wrapper }: ITopicsProps) => {
@@ -16,14 +19,19 @@ const Topics = ({ items: topics, wrapper }: ITopicsProps) => {
       dragPropagation
       dragConstraints={wrapper}
       dragTransition={{ power: 0.035 }}
-      className="rounded-lg cursor-move flex my-2"
+      className="topics"
     >
-      {topics?.map((topic) => (
-        <div key={topic.id}>
-          <Link href={`/category/${topic.slug}`} passHref>
-            <span className="rounded-lg cursor-pointer bg-light-500 mx-2 w-max py-2 px-4 transition-all duration-150 inline-block dark:bg-dark-200 dark:hover:bg-dark-100 hover:bg-light-700">
-              #{topic.title}
-            </span>
+      {topics?.map((topic, index) => (
+        <div key={(topic as ITopicsResponse)?.id || `${topic.title}-${index}`}>
+          <Link
+            href={
+              (topic as ITopicsResponse).slug
+                ? `/category/${(topic as ITopicsResponse)?.slug}`
+                : `/search/${topic.title?.split(" ").join("-")}`
+            }
+            passHref
+          >
+            <motion.a draggable={false}>{topic.title}</motion.a>
           </Link>
         </div>
       ))}
@@ -32,3 +40,5 @@ const Topics = ({ items: topics, wrapper }: ITopicsProps) => {
 };
 
 export default Topics;
+
+//  - DONT GO HERE

@@ -9,6 +9,8 @@ import Topics from "components/Topics";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { ISearchResponse } from "types/SearchResponse";
 import { ITopicsResponse } from "types/TopicsResponse";
+import Image from "next/image";
+import image from "next/image";
 
 const Search = ({
   images,
@@ -31,41 +33,37 @@ const Search = ({
   };
 
   return (
-    <div
-      ref={catagoriesWrapper}
-      className="flex flex-col min-h-screen-sm w-full items-start overflow-x-hidden"
-    >
+    <div ref={catagoriesWrapper} className="search">
       {images ? (
         <>
-          <Topics items={topics} wrapper={catagoriesWrapper} />
+          <div className="heading">
+            <p>Search results for:</p>
+            <h1>{(router.query.q as string).split("-").join(" ")}</h1>
+          </div>
 
-          <h1 className="text-3xl">
-            {" "}
-            total images {images.total} pages: {images.total_pages}{" "}
-          </h1>
+          <Topics asLink items={topics} wrapper={catagoriesWrapper} />
 
-          <div className="w-full px-0.5">
+          <div className="infinite-scroll-wrapper">
             <InfiniteScroll
               dataLength={images.results.length}
               next={nextFunction}
               scrollThreshold={0.7}
               hasMore={images.total_pages >= page}
               loader={
-                <h1 className="font-medium text-center mb-2 text-2xl">
-                  Loading ...
+                <h1 className="loading-msg">
+                  <Image src="/loading.gif" width={32} height={32} alt="1" />
+                  <span className="ml-2"> Loading </span>
                 </h1>
               }
-              className="w-full"
+              className="infinite-scroll"
               endMessage={
-                <h1 className="font-medium text-center mb-4 text-2xl">
-                  We Dont Have More Images to show
-                </h1>
+                <h1 className="end-msg">We dont have more images to show</h1>
               }
             >
               <Masonry
                 disableImagesLoaded={false}
                 updateOnEachImageLoad={false}
-                className="w-full overflow-hidden"
+                className="masonry"
               >
                 {images?.results?.map((image) => (
                   <ImageCard key={image.id} data={image} />
@@ -75,7 +73,7 @@ const Search = ({
           </div>
         </>
       ) : (
-        <div className="flex flex-col font-bold text-2xl items-center justify-center">
+        <div className="error">
           <h1> API LIMIT EXCEED </h1>
           <h1> SORRY UNSPLASH HAS SOME API LIMITATIONS </h1>
           <h1> TRY AGAIN AFTER AN HOUR </h1>
@@ -89,13 +87,15 @@ const Search = ({
 // static stuff
 
 export const getServerSideProps = async ({
-  query,
+  params,
 }: GetServerSidePropsContext) => {
   // images fn and var declaration starts
   let images: ISearchResponse = { total: 0, total_pages: 0, results: [] };
 
+  const query = (params!.q as string).split("-").join(" ");
+
   await fetch(
-    `https://api.unsplash.com/search/photos?query=${query.q}&client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular`
+    `https://api.unsplash.com/search/photos?query=${query}&client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=24&order_by=popular`
   )
     .then((imgRes) => imgRes.json())
     .then((imgRes: ISearchResponse) => {
@@ -104,17 +104,19 @@ export const getServerSideProps = async ({
   // images fn and var declaration starts
 
   // topics fn and var declaration starts
-  const topics: { id: string; slug: string; title: string }[] = [];
+  let topics: {
+    id: string;
+    title: string;
+  }[] = [];
 
-  await fetch(
-    `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20`
-  )
-    .then((topicsRes) => topicsRes.json())
-    .then((topicsRes: ITopicsResponse[]) => {
-      topicsRes.map(({ id, slug, title }) => {
-        topics.push({ id, slug, title });
-      });
-    });
+  images.results.map((img) =>
+    img.tags.map((tag) =>
+      topics.push({ id: `${img.id}-${tag.title}`, title: tag.title })
+    )
+  );
+
+  topics = [...new Map(topics.map((item) => [item["title"], item])).values()];
+  topics.length = 20;
   // topics fn and var declaration ends
 
   if (!images) return { props: { images: null, topics } };

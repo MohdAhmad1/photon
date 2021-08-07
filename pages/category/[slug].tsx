@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
+import { useRouter } from "next/dist/client/router";
+import Image from "next/image";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-component";
+import { BlurhashCanvas } from "react-blurhash";
 import ImageCard from "components/ImageCard";
 import Topics from "components/Topics";
 
@@ -11,13 +14,14 @@ import type {
   InferGetStaticPropsType,
 } from "next";
 import type { IAPIResponse } from "types/ApiResponse";
-import type { ITopicsResponse } from "types/TopicsResponse";
-import { useRouter } from "next/dist/client/router";
+import type {
+  ICurrentTopicResponse,
+  ITopicsResponse,
+} from "types/TopicsResponse";
 
-const CatagorySlug = ({
-  images,
-  topics,
-}: InferGetStaticPropsType<typeof getStaticProps>) => {
+type CatagorySlugProps = InferGetStaticPropsType<typeof getStaticProps>;
+
+const CatagorySlug = ({ images, topics, currentTopic }: CatagorySlugProps) => {
   const catagoriesWrapper = useRef(null);
   const [page, setPage] = useState(3);
 
@@ -29,39 +33,100 @@ const CatagorySlug = ({
     )
       .then((data) => data.json())
       .then((imgData: IAPIResponse[]) => {
-        images?.push(...imgData);
+        (images as IAPIResponse[])?.push(...imgData);
         setPage(page + 1);
       });
   };
 
   return (
-    <div
-      ref={catagoriesWrapper}
-      className="flex flex-col min-h-screen-sm w-full items-start overflow-x-hidden"
-    >
+    <div ref={catagoriesWrapper} className="category">
       {router.isFallback && <h1> LOADING ... </h1>}
 
-      {images ? (
+      {images.length !== 0 ? (
         <>
+          <div className="random-img">
+            {currentTopic && (
+              <>
+                <BlurhashCanvas
+                  hash={currentTopic.cover_photo.blur_hash!}
+                  punch={1}
+                  height={32}
+                  width={32}
+                />
+
+                <Image
+                  src={`${
+                    currentTopic.cover_photo.urls!.raw
+                  }&w=150&fm=webp&q=75`}
+                  // src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
+                  alt={
+                    currentTopic.cover_photo.alt_description ||
+                    "Image Of The Day"
+                  }
+                  unoptimized={true}
+                  layout="fill"
+                  objectFit="cover"
+                />
+
+                <div className="category-info">
+                  <h1>{currentTopic.title}</h1>
+
+                  <p
+                    dangerouslySetInnerHTML={{
+                      __html: currentTopic.description,
+                    }}
+                  />
+                </div>
+
+                <p className="credits">
+                  Photo by{" "}
+                  <a
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    href={`${
+                      currentTopic.cover_photo.user!.links!.html
+                    }?utm_source=photon&utm_medium=referral`}
+                  >
+                    {`${currentTopic.cover_photo.user!.first_name} ${
+                      currentTopic.cover_photo.user!.last_name
+                    }`}
+                  </a>{" "}
+                  on{" "}
+                  <a
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    href="https://unsplash.com/?utm_source=photon&utm_medium=referral"
+                  >
+                    Unsplash
+                  </a>
+                </p>
+              </>
+            )}
+          </div>
+
           <Topics items={topics} wrapper={catagoriesWrapper} />
 
-          <div className="w-full">
+          <div className="infinite-scroll-wrapper">
             <InfiniteScroll
               dataLength={images.length}
               next={nextFunction}
               scrollThreshold={0.7}
               hasMore={true}
               loader={
-                <h1 className="font-medium text-center mb-2 text-2xl">
-                  Loading ...
+                <h1 className="loading-msg">
+                  <Image src="/loading.gif" width={32} height={32} alt="1" />
+                  <span className="ml-2"> Loading </span>
                 </h1>
               }
-              className="w-full"
+              className="infinite-scroll"
+              endMessage={
+                <h1 className="end-msg">We dont have more images to show</h1>
+              }
             >
               <Masonry
                 disableImagesLoaded={false}
                 updateOnEachImageLoad={false}
-                className="w-full overflow-hidden"
+                className="masonry"
               >
                 {images?.map((image) => (
                   <ImageCard key={image.id} data={image} />
@@ -71,7 +136,7 @@ const CatagorySlug = ({
           </div>
         </>
       ) : (
-        <div className="flex flex-col font-bold text-2xl items-center justify-center">
+        <div className="error">
           <h1> API LIMIT EXCEED </h1>
           <h1> SORRY UNSPLASH HAS SOME API LIMITATIONS </h1>
           <h1> TRY AGAIN AFTER AN HOUR </h1>
@@ -84,15 +149,22 @@ const CatagorySlug = ({
 
 // static Props
 export const getStaticProps = async ({ params }: GetStaticPropsContext) => {
+  type ErrorResponse = { errors: string };
+
   // images fn and var declaration starts
-  const images: IAPIResponse[] = [];
+  let images: IAPIResponse[] = [];
 
   await fetch(
     `https://api.unsplash.com/topics/${params?.slug}/photos/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=30&order_by=popular`
   )
     .then((imgRes) => imgRes.json())
-    .then((imgData: IAPIResponse[]) => {
-      images.push(...imgData);
+    .then((imgData: IAPIResponse[] | ErrorResponse) => {
+      if ((imgData as ErrorResponse).errors) return (images = []);
+      images = imgData as IAPIResponse[];
+    })
+    .catch((err) => {
+      images = [];
+      console.log(err);
     });
   // images fn and var declaration ends
 
@@ -103,14 +175,35 @@ export const getStaticProps = async ({ params }: GetStaticPropsContext) => {
     `https://api.unsplash.com/topics/?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=20`
   )
     .then((topicsRes) => topicsRes.json())
-    .then((topicsRes: ITopicsResponse[]) => {
-      topics.push(...topicsRes);
-    });
+    .then((topicsRes: ITopicsResponse[] | ErrorResponse) => {
+      if ((topicsRes as ErrorResponse).errors) return (topicsRes = []);
+      topics.push(...(topicsRes as ITopicsResponse[]));
+    })
+    .catch((err) => console.log(err));
   // topics fn and var declaration ends
 
-  if (!images) return { props: { images: null, topics } };
+  // topicDetail fn and var declaration starts
+  let currentTopic: ICurrentTopicResponse[] = [];
 
-  return { props: { images, topics }, revalidate: 10 * 60 }; // revalidate in seconds
+  await fetch(
+    `https://api.unsplash.com/topics/${params?.slug}?client_id=${process.env.NEXT_PUBLIC_API_KEY}`
+  )
+    .then((data) => data.json())
+    .then((currentTopicData: ICurrentTopicResponse | ErrorResponse) => {
+      if ((currentTopicData as ErrorResponse).errors)
+        return (currentTopic = []);
+
+      currentTopic.push(currentTopicData as ICurrentTopicResponse);
+    })
+    .catch((err) => console.log(err));
+  // topicDetail fn and var declaration ends
+
+  if (images === null) return { props: { images: [], topics, notFound: true } };
+
+  return {
+    props: { images, topics, currentTopic: currentTopic[0] },
+    revalidate: 10 * 60,
+  }; // revalidate in seconds
 };
 
 // static Paths
@@ -123,10 +216,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     params: { slug },
   }));
 
-  return {
-    paths: topicPaths,
-    fallback: false,
-  };
+  return { paths: topicPaths, fallback: false };
 };
 
 export default CatagorySlug;

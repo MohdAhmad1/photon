@@ -1,6 +1,6 @@
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BlurhashCanvas } from "react-blurhash";
 
@@ -29,17 +29,19 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
     </svg>
   );
 
+  // const deviceSizes = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1296, 1400, 1600, 1800, 2000, 2200, 2400, 2596]
+
   return (
     <main
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => (setIsDropDownActive(false), setIsHovered(false))}
-      className="rounded-xl w-full p-1 sm:w-1/2 md:w-1/3 hover:bg-light-900 hover:shadow-lg hover:shadow-dark-900 dark:hover:bg-dark-200 dark:hover:shadow-light-900"
+      className="img-card-main"
     >
-      <div className="rounded-xl w-full p-0 relative overflow-hidden">
+      <div className="wrapper">
         {/* the image */}
         <Link href={`/image/${image.id}`} passHref>
-          <a className="rounded-xl p-0.5 block overflow-hidden">
-            <figure className="rounded-lg flex relative overflow-hidden">
+          <a className="image-link">
+            <figure>
               <BlurhashCanvas
                 hash={image.blur_hash}
                 punch={1}
@@ -48,8 +50,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                 width={32}
               />
               <Image
-                // src={`${image.urls.raw}&fm=webp&w=200&fit=max&q=75`}
-                src="https://i.picsum.photos/id/242/200/300.jpg?hmac=_v7qaiV_fwDB3NP9lpirq7rMvS10u8lHjqMYNmmXya4"
+                src={`${image.urls.raw}&fm=webp&w=50&fit=max&q=75`}
                 alt={image.alt_description || "Placeholder Image"}
                 width={image.width}
                 height={image.height}
@@ -60,22 +61,22 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
             </figure>
           </a>
         </Link>
+
         <AnimatePresence>
           {isHovered === true && (
-            <>
+            <div className="offcanvas-link-wrapper">
               {/* credits to photographer and unsplash */}
               <motion.p
                 initial={{ y: "150%" }}
                 animate={{ y: "0%" }}
                 exit={{ y: "150%" }}
-                className="rounded-lg bg-opacity-50 bg-light-50 my-3 text-sm py-1 px-2 inset-x-3 bottom-0 text-dark-800 backdrop-filter backdrop-blur-md absolute dark:bg-opacity-30 dark:bg-dark-900 dark:text-true-gray-50"
+                className="credits"
               >
                 Photo by{" "}
                 <a
                   target="_blank"
                   rel="noreferrer noopener"
                   href={`${image.user.links.html}?utm_source=photon&utm_medium=referral`}
-                  className="border-b font-medium border-dark-900 text-dark-900 dark:border-light-500 dark:text-light-500 hover:border-transparent"
                 >
                   {`${image.user.first_name} ${image.user.last_name}`}
                 </a>{" "}
@@ -84,7 +85,6 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                   target="_blank"
                   rel="noreferrer noopener"
                   href="https://unsplash.com/?utm_source=photon&utm_medium=referral"
-                  className="border-b font-medium border-dark-900 text-dark-900 dark:border-light-500 dark:text-light-500 hover:border-transparent"
                 >
                   Unsplash
                 </a>
@@ -95,16 +95,16 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                 initial={{ y: "-100%" }}
                 animate={{ y: "0%" }}
                 exit={{ y: "-130%" }}
-                className="top-3 right-3 absolute"
+                className="dropdown"
                 onBlur={() => console.log("blur")}
               >
                 <motion.button
                   onClick={() => setIsDropDownActive(!isDropDownActive)}
                   whileTap={{ scale: 0.9 }}
-                  className="cursor-pointer flex bg-light-500 rounded-1 p-2 overflow-hidden items-center justify-center dark:bg-dark-200 hover:bg-light-600 dark:hover:bg-dark-100"
                 >
                   <DownloadSVG />
                 </motion.button>
+
                 <AnimatePresence>
                   {isDropDownActive && (
                     <motion.div
@@ -115,7 +115,6 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                         default: { type: "spring" },
                         scale: { type: "spring", stiffness: 350 },
                       }}
-                      className="rounded-lg flex flex-col bg-light-100 top-full mt-1 w-max p-2 right-0 items-center absolute dark:bg-dark-200"
                     >
                       {[
                         { w: 640, name: "Small" },
@@ -123,10 +122,9 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                         { w: 2400, name: "Large" },
                       ].map((imgSrc, index) => (
                         <a
-                          className="rounded-md flex text-sm w-full py-1 px-1.5 items-center justify-between hover:bg-light-800 dark:hover:bg-dark-400"
                           target="_blank"
                           rel="noreferrer noopener"
-                          href={`${image.links.download}?force=true&w=640`}
+                          href={`${image.links.download}?force=true&w=${imgSrc.w}`}
                           key={`dl-${image.id}-${index}`}
                         >
                           <span> {imgSrc.name} </span>
@@ -140,7 +138,6 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                         </a>
                       ))}
                       <a
-                        className="rounded-md flex my-0.5 w-full py-1 px-1.5 items-center justify-between hover:bg-light-800 dark:hover:bg-dark-400"
                         target="_blank"
                         rel="noreferrer noopener"
                         href={`${image.links.download}?force=true`}
@@ -154,7 +151,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                   )}
                 </AnimatePresence>
               </motion.div>
-            </>
+            </div>
           )}
         </AnimatePresence>
       </div>

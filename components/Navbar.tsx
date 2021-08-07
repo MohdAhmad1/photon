@@ -69,24 +69,20 @@ const Navbar = () => {
     e.preventDefault();
 
     if (searchValue.length > 0) {
-      router.push(`/search?q=${encodeURIComponent(searchValue)}`);
+      router.push(`/search/${searchValue.split(" ").join("-")}`);
     }
   };
 
   return (
-    <nav className="flex shadow-lg shadow-md w-full py-4 px-4 shadow-true-gray-400 items-center justify-between sm:px-14 dark:shadow-true-gray-600">
+    <nav className="navbar">
       <Link href="/" passHref>
         <a>
-          <h1 className="font-bold text-xl">Photon</h1>
+          <h1>Photon</h1>
         </a>
       </Link>
 
-      <form
-        onSubmit={handleFormsubmit}
-        className="border border-transparent rounded-lg flex bg-light-500 w-full w-6/12 sm:w-2/3 md:w-1/2 dark:bg-dark-200 hover:bg-light-600 dark:focus:border-dark-50"
-      >
+      <form onSubmit={handleFormsubmit} className="form">
         <input
-          className="border border-transparent rounded-lg h-full w-full py-2 px-4 focus:border-light-600 dark:focus:border-dark-50"
           type="search"
           name="search"
           id="search"
@@ -95,14 +91,14 @@ const Navbar = () => {
           onChange={(e) => setSearchValue(e.target.value)}
         />
 
-        <button type="submit" className="p-2">
+        <button type="submit">
           <SearchSVG />
         </button>
       </form>
 
       <motion.button
         whileTap={{ scale: 0.9 }}
-        className="cursor-pointer flex bg-light-500 rounded-1 p-2 overflow-hidden items-center justify-center dark:bg-dark-200 hover:bg-light-600 dark:hover:bg-dark-100"
+        className="btn"
         onClick={() => {
           setTheme(theme === "dark" ? "light" : "dark");
         }}

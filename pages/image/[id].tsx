@@ -1,51 +1,118 @@
-import ImageCard from "components/ImageCard";
-import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/dist/client/router";
 import Image from "next/image";
+import { useRef } from "react";
+import { BlurhashCanvas } from "react-blurhash";
+import InfiniteScroll from "react-infinite-scroll-component";
+import Masonry from "react-masonry-component";
+import ImageCard from "components/ImageCard";
+import Topics from "components/Topics";
 
-const DynamicImage = () => {
-  const router = useRouter();
+// types
+import type { IPhotoResponse } from "types/PhotoResponse";
+import type {
+  GetServerSidePropsContext,
+  InferGetServerSidePropsType,
+} from "next";
+import { IAPIResponse } from "types/ApiResponse";
+
+const DynamicImage = ({
+  currentImage,
+  images,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  const wrapper = useRef(null);
 
   return (
-    <AnimatePresence initial={false}>
-      <div>
-        <motion.div
-          className="h-full w-full relative"
-          layout
-          layoutId={`${router.query.id as string}`}
-        >
-          <motion.figure
-            className="h-full w-full"
-            layout
-            layoutId={`${router.query.id as string}-image`}
-          >
-            <Image
-              src="https://picsum.photos/id/1001/200/300.webp"
-              alt="s"
-              layout="responsive"
-              width={400}
-              height={500}
-              // className="h-full object-cover w-full"
-            />
+    <div className="image-page" ref={wrapper}>
+      {currentImage ? (
+        <>
+          <div className="image">
+            <figure>
+              <BlurhashCanvas
+                hash={currentImage.blur_hash}
+                punch={1}
+                className="h-full w-full inset-0 absolute"
+                height={32}
+                width={32}
+              />
+              <Image
+                src={`${currentImage.urls.raw}&fm=webp&w=200&fit=max&q=75`}
+                alt={currentImage.description || "Placeholder Image"}
+                width={currentImage.width}
+                height={currentImage.height}
+                objectFit="cover"
+                unoptimized={true}
+              />
+            </figure>
+          </div>
 
-            <h1 className="font-black transform bottom-10 left-10 text-4xl rotate-90 absolute">
-              --&gt;
-            </h1>
-          </motion.figure>
-        </motion.div>
+          <h1 className="heading">Explore More</h1>
 
-        <div className="p-12">
-          <h1>Explore More</h1>
+          <Topics items={currentImage.tags} wrapper={wrapper} asLink={true} />
 
-          {/* <div className="grid gap-8 grid-cols-3">
-          {new Array(6).fill(0).map((e, key) => (
-            <ImageCard key={key + 7} link={key} />
-            ))}
-        </div> */}
-        </div>
-      </div>
-    </AnimatePresence>
+          <div className="infinite-scroll-wrapper">
+            <InfiniteScroll
+              dataLength={30}
+              next={() => null}
+              scrollThreshold={0.7}
+              hasMore={false}
+              loader={
+                <h1 className="loading-msg">
+                  <Image src="/loading.gif" width={32} height={32} alt="1" />
+                  <span> Loading </span>
+                </h1>
+              }
+              className="infinite-scroll"
+            >
+              <Masonry
+                disableImagesLoaded={false}
+                updateOnEachImageLoad={false}
+                className="masonry"
+              >
+                {images?.map((image) => (
+                  <ImageCard key={image.id} data={image} />
+                ))}
+              </Masonry>
+            </InfiniteScroll>
+          </div>
+        </>
+      ) : null}
+    </div>
   );
+};
+
+// static Props
+export const getServerSideProps = async ({
+  query,
+}: GetServerSidePropsContext) => {
+  // current images fn and var declaration starts
+  const currentImage: IPhotoResponse[] = [];
+
+  await fetch(
+    `https://api.unsplash.com/photos/${query?.id}?client_id=${process.env.NEXT_PUBLIC_API_KEY}`
+  )
+    .then((imgRes) => imgRes.json())
+    .then((imgData: IPhotoResponse) => {
+      currentImage.push(imgData);
+    });
+  // current images fn and var declaration ends
+
+  // images fn and var declaration starts
+  const images: IAPIResponse[] = [];
+
+  await fetch(
+    `https://api.unsplash.com/topics/${currentImage[0].topics[0].slug}/photos?client_id=${process.env.NEXT_PUBLIC_API_KEY}&per_page=30`
+  )
+    .then((imgRes) => imgRes.json())
+    .then((imgData: IAPIResponse[]) => {
+      images.push(...imgData);
+    })
+    .catch((err) => console.log(err));
+
+  // images fn and var declaration ends
+
+  if (currentImage.length === 0)
+    return { props: { currentImage: null, images: null } };
+
+  return { props: { currentImage: currentImage[0], images } };
 };
 
 export default DynamicImage;
