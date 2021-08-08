@@ -1,6 +1,7 @@
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
+// types
 import type { MutableRefObject } from "react";
 import type { Tag } from "types/PhotoResponse";
 import type { ITopicsResponse } from "types/TopicsResponse";

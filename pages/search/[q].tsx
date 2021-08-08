@@ -1,16 +1,16 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/dist/client/router";
+import Image from "next/image";
+
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-component";
+
 import ImageCard from "components/ImageCard";
 import Topics from "components/Topics";
 
 // types
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { ISearchResponse } from "types/SearchResponse";
-import { ITopicsResponse } from "types/TopicsResponse";
-import Image from "next/image";
-import image from "next/image";
 
 const Search = ({
   images,

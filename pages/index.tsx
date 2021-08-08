@@ -1,7 +1,11 @@
 import { useRef, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/dist/client/router";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-component";
+import { BlurhashCanvas } from "react-blurhash";
+
 import ImageCard from "components/ImageCard";
 import Topics from "components/Topics";
 
@@ -9,9 +13,6 @@ import Topics from "components/Topics";
 import type { InferGetStaticPropsType } from "next";
 import type { IAPIResponse } from "types/ApiResponse";
 import type { ITopicsResponse } from "types/TopicsResponse";
-import Image from "next/image";
-import { BlurhashCanvas } from "react-blurhash";
-import { useRouter } from "next/dist/client/router";
 
 type HomeProps = InferGetStaticPropsType<typeof getStaticProps> & {};
 
@@ -53,7 +54,8 @@ const Home = ({ images, topics, imgOfTheDay }: HomeProps) => {
       .then((imgData: IAPIResponse[]) => {
         images?.push(...imgData);
         setPage(page + 1);
-      });
+      })
+      .catch((err) => console.log(err));
   };
 
   return (

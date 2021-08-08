@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+
 import { AnimatePresence, motion } from "framer-motion";
 import { BlurhashCanvas } from "react-blurhash";
 
@@ -29,8 +30,6 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
     </svg>
   );
 
-  // const deviceSizes = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1296, 1400, 1600, 1800, 2000, 2200, 2400, 2596]
-
   return (
     <main
       onMouseEnter={() => setIsHovered(true)}
@@ -49,6 +48,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                 height={32}
                 width={32}
               />
+
               <Image
                 src={`${image.urls.raw}&fm=webp&w=50&fit=max&q=75`}
                 alt={image.alt_description || "Placeholder Image"}

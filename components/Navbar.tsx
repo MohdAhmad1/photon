@@ -80,7 +80,6 @@ const Navbar = () => {
           <h1>Photon</h1>
         </a>
       </Link>
-
       <form onSubmit={handleFormsubmit} className="form">
         <input
           type="search"
@@ -90,12 +89,10 @@ const Navbar = () => {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
         />
-
         <button type="submit">
           <SearchSVG />
         </button>
       </form>
-
       <motion.button
         whileTap={{ scale: 0.9 }}
         className="btn"

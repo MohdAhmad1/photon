@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/dist/client/router";
 import Image from "next/image";
+
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-component";
 import { BlurhashCanvas } from "react-blurhash";
+
 import ImageCard from "components/ImageCard";
 import Topics from "components/Topics";
 
@@ -35,7 +37,8 @@ const CatagorySlug = ({ images, topics, currentTopic }: CatagorySlugProps) => {
       .then((imgData: IAPIResponse[]) => {
         (images as IAPIResponse[])?.push(...imgData);
         setPage(page + 1);
-      });
+      })
+      .catch((err) => console.log(err));
   };
 
   return (
