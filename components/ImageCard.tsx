@@ -50,7 +50,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
               />
 
               <Image
-                src={`${image.urls.raw}&fm=webp&w=50&fit=max&q=75`}
+                src={`${image.urls.raw}&fm=webp&w=700&fit=max&q=75`}
                 alt={image.alt_description || "Placeholder Image"}
                 width={image.width}
                 height={image.height}

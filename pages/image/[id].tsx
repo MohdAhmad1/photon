@@ -60,7 +60,7 @@ const DynamicImage = ({
                 width={32}
               />
               <Image
-                src={`${currentImage.urls.raw}&fm=webp&w=50&fit=max&q=75`}
+                src={`${currentImage.urls.raw}&fm=webp&w=1500&fit=max&q=75`}
                 alt={currentImage.description || "Placeholder Image"}
                 width={currentImage.width}
                 height={currentImage.height}
@@ -166,7 +166,13 @@ const DynamicImage = ({
                 hasMore={false}
                 loader={
                   <h1 className="loading-msg">
-                    <Image src="/loading.gif" width={32} height={32} alt="1" />
+                    <Image
+                      src="/loading.gif"
+                      loading="eager"
+                      width={32}
+                      height={32}
+                      alt="1"
+                    />
                     <span> Loading </span>
                   </h1>
                 }

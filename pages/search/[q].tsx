@@ -51,7 +51,13 @@ const Search = ({
               hasMore={images.total_pages >= page}
               loader={
                 <h1 className="loading-msg">
-                  <Image src="/loading.gif" width={32} height={32} alt="1" />
+                  <Image
+                    src="/loading.gif"
+                    loading="eager"
+                    width={32}
+                    height={32}
+                    alt="1"
+                  />
                   <span className="ml-2"> Loading </span>
                 </h1>
               }

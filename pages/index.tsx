@@ -73,8 +73,7 @@ const Home = ({ images, topics, imgOfTheDay }: HomeProps) => {
                 />
 
                 <Image
-                  src={`${imgOfTheDay.urls.raw}&w=150&fm=webp&q=75`}
-                  // src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
+                  src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
                   alt={imgOfTheDay.alt_description || "Image Of The Day"}
                   unoptimized={true}
                   layout="fill"
@@ -146,7 +145,13 @@ const Home = ({ images, topics, imgOfTheDay }: HomeProps) => {
               hasMore={true}
               loader={
                 <h1 className="loading-msg">
-                  <Image src="/loading.gif" width={32} height={32} alt="1" />
+                  <Image
+                    src="/loading.gif"
+                    loading="eager"
+                    width={32}
+                    height={32}
+                    alt="1"
+                  />
                   <span> Loading </span>
                 </h1>
               }

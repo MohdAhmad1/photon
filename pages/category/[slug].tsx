@@ -60,8 +60,7 @@ const CatagorySlug = ({ images, topics, currentTopic }: CatagorySlugProps) => {
                 <Image
                   src={`${
                     currentTopic.cover_photo.urls!.raw
-                  }&w=150&fm=webp&q=75`}
-                  // src={`${imgOfTheDay.urls.raw}&w=1500&fm=webp&q=75`}
+                  }&w=1500&fm=webp&q=75`}
                   alt={
                     currentTopic.cover_photo.alt_description ||
                     "Image Of The Day"
@@ -117,7 +116,13 @@ const CatagorySlug = ({ images, topics, currentTopic }: CatagorySlugProps) => {
               hasMore={true}
               loader={
                 <h1 className="loading-msg">
-                  <Image src="/loading.gif" width={32} height={32} alt="1" />
+                  <Image
+                    src="/loading.gif"
+                    loading="eager"
+                    width={32}
+                    height={32}
+                    alt="1"
+                  />
                   <span className="ml-2"> Loading </span>
                 </h1>
               }
