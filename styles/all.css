@@ -19,16 +19,16 @@
 
 /*  - image card */
 .img-card-main {
-  @apply rounded-xl w-full p-1 sm:w-1/2 md:w-1/3 hover:bg-light-900 hover:shadow-lg hover:shadow-dark-900 dark:hover:bg-dark-200 dark:hover:shadow-light-900;
+  @apply rounded-xl w-full p-1 sm:w-1/2 lg:w-1/3 hover:bg-light-900 hover:shadow-lg hover:shadow-dark-900 dark:hover:bg-dark-200 dark:hover:shadow-light-900;
 
   &:hover {
     .wrapper {
-      @apply before:(content pointer-events-none z-5 absolute inset-0 opacity-50 bg-gradient-to-b from-dark-900 via-transparent to-dark-900 transition-all duration-500);
+      @apply before:opacity-50 before:dark:opacity-50;
     }
   }
 
   .wrapper {
-    @apply rounded-xl w-full p-0 relative overflow-hidden;
+    @apply rounded-xl w-full p-0 relative overflow-hidden before:(content pointer-events-none z-5 absolute inset-0 opacity-0 dark:opacity-10 bg-dark-900 transition-all duration-150);
 
     .image-link {
       @apply rounded-xl  block overflow-hidden;
@@ -44,24 +44,24 @@
       @apply h-full w-full inset-0 z-10 absolute pointer-events-none;
 
       p {
-        @apply !w-auto;
+        @apply !w-auto pointer-events-auto;
       }
+    }
+  }
+}
 
-      .dropdown {
-        @apply top-3 right-3 pointer-events-auto absolute;
+.dropdown {
+  @apply top-3 right-3 pointer-events-auto z-10 absolute;
 
-        button {
-          @apply cursor-pointer flex bg-light-500 rounded-1 p-2 overflow-hidden items-center justify-center dark:bg-dark-200 hover:bg-light-600 dark:hover:bg-dark-100;
-        }
+  button {
+    @apply cursor-pointer flex bg-light-500 rounded-1 p-2 overflow-hidden items-center justify-center dark:bg-dark-200 hover:bg-light-600 dark:hover:bg-dark-100;
+  }
 
-        div {
-          @apply rounded-lg flex flex-col bg-light-100 top-full mt-1 w-max p-2 right-0 items-center absolute dark:bg-dark-200;
+  div {
+    @apply rounded-lg flex flex-col text-sm bg-light-100 top-full mt-1 w-max p-1.5 right-0 items-center absolute dark:bg-dark-200;
 
-          a {
-            @apply rounded-md flex my-0.5 w-full py-1 px-1.5 items-center justify-between hover:bg-light-800 dark:hover:bg-dark-400;
-          }
-        }
-      }
+    a {
+      @apply rounded-md flex my-0.5 w-full py-1 px-1.5 items-center justify-between hover:bg-light-800 dark:hover:bg-dark-400;
     }
   }
 }
@@ -84,7 +84,7 @@
   @apply border border-transparent rounded-lg flex bg-light-500 w-full w-6/12 sm:w-2/3 md:w-1/2 dark:bg-dark-200 hover:bg-light-600 dark:hover:bg-dark-200 dark:focus:border-dark-50;
 
   input {
-    @apply border border-transparent rounded-lg h-full w-full py-2 px-4 focus:border-light-600 dark:focus:border-dark-50;
+    @apply border border-transparent rounded-lg h-full w-full py-2 px-4 focus:border-light-700 dark:focus:border-dark-50;
   }
 
   button {
@@ -198,6 +198,12 @@
     figure {
       @apply rounded-lg flex m-0 w-max relative overflow-hidden;
 
+      @apply before:(content pointer-events-none z-5 absolute inset-0 opacity-0 dark:opacity-10 bg-dark-900 transition-all duration-150);
+
+      &:hover {
+        @apply before:(opacity-30 dark:opacity-40);
+      }
+
       img {
         max-height: 70vh !important;
         width: auto !important;
@@ -213,7 +219,7 @@
 
 /* - credits */
 .credits {
-  @apply rounded-lg bg-opacity-50 bg-light-50 my-3 text-sm w-max py-1 px-2 inset-x-3 bottom-0 text-dark-800 z-10 backdrop-filter backdrop-blur-md absolute dark:bg-opacity-30 dark:bg-dark-900 dark:text-true-gray-50;
+  @apply rounded-lg bg-opacity-90 bg-light-50 my-3 text-sm w-max py-1 px-2 inset-x-3 bottom-0 text-dark-800 z-9 backdrop-filter backdrop-blur-md absolute dark:bg-opacity-30 dark:bg-dark-900 dark:text-true-gray-50;
 
   a {
     @apply border-b font-medium border-dark-900 text-dark-900 dark:border-light-500 dark:text-light-500 hover:border-transparent;

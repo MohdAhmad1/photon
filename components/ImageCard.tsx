@@ -9,26 +9,26 @@ import { BlurhashCanvas } from "react-blurhash";
 import { IAPIResponse } from "types/ApiResponse";
 import { Result } from "types/SearchResponse";
 
+const DownloadSVG = () => (
+  <svg
+    className="h-6 w-6"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+    />
+  </svg>
+);
+
 const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
   const [isDropDownActive, setIsDropDownActive] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-
-  const DownloadSVG = () => (
-    <svg
-      className="h-6 w-6"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-      />
-    </svg>
-  );
 
   return (
     <main
@@ -77,6 +77,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                   target="_blank"
                   rel="noreferrer noopener"
                   href={`${image.user.links.html}?utm_source=photon&utm_medium=referral`}
+                  onClick={() => setIsDropDownActive(false)}
                 >
                   {`${image.user.first_name} ${image.user.last_name}`}
                 </a>{" "}
@@ -85,6 +86,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                   target="_blank"
                   rel="noreferrer noopener"
                   href="https://unsplash.com/?utm_source=photon&utm_medium=referral"
+                  onClick={() => setIsDropDownActive(false)}
                 >
                   Unsplash
                 </a>
@@ -142,7 +144,7 @@ const ImageCard = ({ data: image }: { data: IAPIResponse | Result }) => {
                         rel="noreferrer noopener"
                         href={`${image.links.download}?force=true`}
                       >
-                        <span className="mr-1">Original</span>{" "}
+                        <span className="mr-3">Original</span>{" "}
                         <span className="text-xs">
                           ({image.width}x{image.height})
                         </span>

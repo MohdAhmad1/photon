@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { BlurhashCanvas } from "react-blurhash";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -15,12 +15,36 @@ import type {
   InferGetServerSidePropsType,
 } from "next";
 import { IAPIResponse } from "types/ApiResponse";
+import { AnimatePresence, motion } from "framer-motion";
+import useOnClickOutside from "components/useOnClickOutside";
+
+const DownloadSVG = () => (
+  <svg
+    className="h-6 w-6"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+    />
+  </svg>
+);
 
 const DynamicImage = ({
   currentImage,
   images,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const wrapper = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const [isDropDownActive, setIsDropDownActive] = useState(false);
+
+  useOnClickOutside(dropdownRef, () => setIsDropDownActive(false));
 
   return (
     <div className="image-page">
@@ -43,6 +67,91 @@ const DynamicImage = ({
                 objectFit="cover"
                 unoptimized={true}
               />
+
+              {/* credits */}
+              <p className="credits">
+                Photo by{" "}
+                <a
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  href={`${currentImage.user.links.html}?utm_source=photon&utm_medium=referral`}
+                >
+                  {`${currentImage.user.first_name} ${currentImage.user.last_name}`}
+                </a>{" "}
+                on{" "}
+                <a
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  href="https://unsplash.com/?utm_source=photon&utm_medium=referral"
+                >
+                  Unsplash
+                </a>
+              </p>
+
+              {/* download menu */}
+              <motion.div
+                initial={{ y: "-100%" }}
+                animate={{ y: "0%" }}
+                exit={{ y: "-130%" }}
+                className="dropdown"
+                onBlur={() => console.log("blur")}
+                ref={dropdownRef}
+              >
+                <motion.button
+                  onClick={() => setIsDropDownActive(!isDropDownActive)}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <DownloadSVG />
+                </motion.button>
+                <AnimatePresence>
+                  {isDropDownActive && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{
+                        default: { type: "spring" },
+                        scale: { type: "spring", stiffness: 350 },
+                      }}
+                    >
+                      {[
+                        { w: 640, name: "Small" },
+                        { w: 1920, name: "Medium" },
+                        { w: 2400, name: "Large" },
+                      ].map((imgSrc, index) => (
+                        <a
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          href={`${currentImage.links.download}?force=true&w=${imgSrc.w}`}
+                          key={`dl-${currentImage.id}-${index}`}
+                          onClick={() => setIsDropDownActive(false)}
+                        >
+                          <span> {imgSrc.name} </span>
+                          <span className="text-xs">
+                            ({imgSrc.w}x
+                            {Math.round(
+                              (currentImage.height / currentImage.width) *
+                                imgSrc.w
+                            )}
+                            )
+                          </span>
+                        </a>
+                      ))}
+                      <a
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        href={`${currentImage.links.download}?force=true`}
+                        onClick={() => setIsDropDownActive(false)}
+                      >
+                        <span className="mr-3">Original</span>{" "}
+                        <span className="text-xs">
+                          ({currentImage.width}x{currentImage.height})
+                        </span>
+                      </a>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </figure>
           </div>
 

@@ -1,7 +1,7 @@
 import { MutableRefObject, useEffect } from "react";
 
 export default function useOnClickOutside(
-  ref: MutableRefObject<HTMLDivElement>,
+  ref: MutableRefObject<HTMLDivElement | null>,
   handler: (event: any) => void
 ) {
   useEffect(
